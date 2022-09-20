@@ -1,9 +1,13 @@
 package app.presentation;
 
 
+import app.beans.Departement;
+import app.beans.Localite;
+import app.beans.Personne;
 import app.exceptions.MyDBException;
 import app.helpers.DateTimeLib;
 import app.helpers.JfxPopup;
+import app.helpers.SystemLib;
 import app.workers.DbWorker;
 import app.workers.PersonneManager;
 import java.io.File;
@@ -32,7 +36,7 @@ import javafx.stage.Stage;
  */
 public class MainCtrl implements Initializable {
 
-    final static private String PU = "PU_MYSQL";
+    final static private String PU = "Ex09_-_JPA_DAOPU";
 
     private DbWorker dbWrk;
     private PersonneManager persMan;
@@ -67,9 +71,9 @@ public class MainCtrl implements Initializable {
     @FXML
     private DatePicker dateNaissance;
     @FXML
-    private ComboBox<?> cbxLocalite;
+    private ComboBox<Localite> cbxLocalite;
     @FXML
-    private ComboBox<?> cbxDepartement;
+    private ComboBox<Departement> cbxDepartement;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -258,7 +262,7 @@ public class MainCtrl implements Initializable {
     private void menuChargerLocalites(ActionEvent event) {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Sélectionnez le fichier des localits");
-        Path path = Paths.get("data").toAbsolutePath();
+        Path path = Paths.get("../data").toAbsolutePath();
         chooser.setInitialDirectory(path.toFile());
         File file = chooser.showOpenDialog(new Stage());
         if (file != null) {
@@ -280,7 +284,7 @@ public class MainCtrl implements Initializable {
     private void menuChargerDepartement(ActionEvent event) {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Sélectionnez le fichier des départements");
-        Path path = Paths.get("data").toAbsolutePath();
+        Path path = Paths.get("../data").toAbsolutePath();
         chooser.setInitialDirectory(path.toFile());
         File file = chooser.showOpenDialog(new Stage());
         if (file != null) {
@@ -301,5 +305,10 @@ public class MainCtrl implements Initializable {
     @FXML
     private void menuRechercher(ActionEvent event) {
         String nomARechercher = JfxPopup.askInfo("Recherche", "Rechercher une personne avec le son nom", "Insérer le nom à rechercher");
+        try {
+            afficherPersonne(dbWrk.rechercherPersonneAvecNom(nomARechercher));
+        } catch (MyDBException e) {
+                JfxPopup.displayError("ERREUR", null, e.getMessage());
+        }
     }
 }
