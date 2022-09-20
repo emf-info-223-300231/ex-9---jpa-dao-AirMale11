@@ -1,5 +1,6 @@
 package app.workers.dao;
 
+import app.beans.Personne;
 import app.exceptions.MyDBException;
 import app.helpers.SystemLib;
 import java.util.ArrayList;
@@ -47,6 +48,14 @@ public class JpaDao<E, PK> implements JpaDaoItf<E, PK> {
      */
     @Override
     public void creer(E e) throws MyDBException {
+        try{
+          et.begin();
+          em.persist(e);
+          et.commit();
+        } catch(Exception ex){
+            et.rollback();
+            throw new MyDBException(ex.getMessage(), "Exception");
+        }
     }
 
     /**
@@ -156,7 +165,15 @@ public class JpaDao<E, PK> implements JpaDaoItf<E, PK> {
     @Override
     @SuppressWarnings("unchecked")
     public E rechercher(String prop, Object valeur) throws MyDBException {
-        return null;
+        E resultat;
+        try {
+            Query q1 = em.createQuery("SELECT e FROM "+cl.getSimpleName() +" e WHERE e."+prop+"=:valeur");
+            q1.setParameter("valeur", valeur);
+            resultat = (E)q1.getSingleResult();
+        } catch (Exception e) {
+            throw new MyDBException(SystemLib.getFullMethodName(), e.getMessage());
+        }
+        return resultat;
     }
 
     /**
@@ -188,7 +205,21 @@ public class JpaDao<E, PK> implements JpaDaoItf<E, PK> {
      */
     @Override
     public int effacerListe() throws MyDBException {
-        int nb;
+        int nb = 0;
+        List<E> el = lireListe();
+        try {
+            et.begin();
+            for (E e : el) {
+                if (e != null) {
+                    em.remove(e);
+                    
+                }
+            }
+            et.commit();
+        } catch (Exception e) {
+            et.rollback();
+            throw new MyDBException(SystemLib.getFullMethodName(), e.getMessage());
+        }
         return nb;
     }
 
@@ -202,6 +233,17 @@ public class JpaDao<E, PK> implements JpaDaoItf<E, PK> {
     @Override
     public int sauverListe(List<E> list) throws MyDBException {
         int nb = 0;
+        try {
+            et.begin();
+            for (E e : list) {
+                em.merge(e);
+            }
+            et.commit();
+        } catch (Exception e) {
+            et.commit();
+            throw new MyDBException(SystemLib.getFullMethodName(), e.getMessage());
+        }
+        
         return nb;
     }
 
